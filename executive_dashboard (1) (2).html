@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTIVIDAD DEL AREA DE OPERACIONES</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="h-full flex flex-col antialiased bg-slate-950 text-slate-100 selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-30 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center space-x-3.5">
+            <div class="p-2.5 bg-gradient-to-tr from-brand-600 to-cyan-500 text-white rounded-xl shadow-lg shadow-brand-500/20">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight text-white uppercase">ACTIVIDAD DEL AREA DE OPERACIONES</h1>
+                <p class="text-xs text-slate-400 font-medium">Panel Ejecutivo de Control, Gestión de Horas y Facturación</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button id="resetFiltersBtn" class="flex items-center gap-2 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-lg transition border border-slate-700/70 shadow-sm active:scale-95">
+                <i class="fa-solid fa-rotate-left text-slate-400"></i>
+                <span>Limpiar Filtros</span>
+            </button>
+            <button id="exportCsvBtn" class="flex items-center gap-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-md shadow-emerald-900/30 transition active:scale-95">
+                <i class="fa-solid fa-file-excel"></i>
+                <span>Exportar CSV</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1700px] mx-auto w-full">
+
+        <!-- Dynamic Control Bar / Filters -->
+        <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg backdrop-blur-sm">
+            <div class="flex items-center gap-2 mb-3.5 text-xs font-bold uppercase tracking-wider text-brand-400">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Filtros Dinámicos y Segmentación</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Fecha Inicio -->
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Fecha Inicio</label>
+                    <input type="date" id="filterStartDate" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition">
+                </div>
+                <!-- Fecha Fin -->
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Fecha Fin</label>
+                    <input type="date" id="filterEndDate" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition">
+                </div>
+                <!-- Analista -->
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Analista</label>
+                    <select id="filterAnalista" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition">
+                        <option value="">Todos los Analistas</option>
+                    </select>
+                </div>
+                <!-- ARL -->
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">ARL</label>
+                    <select id="filterARL" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition">
+                        <option value="">Todas las ARL</option>
+                    </select>
+                </div>
+                <!-- Consultor -->
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Consultor</label>
+                    <select id="filterConsultor" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition">
+                        <option value="">Todos los Consultores</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Executive Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- KPI 1 -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-brand-500/50 transition">
+                <div class="absolute inset-y-0 left-0 w-1 bg-brand-500"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Horas Totales</p>
+                    <h3 id="kpiTotalHours" class="text-2xl font-black text-white mt-1">0 h</h3>
+                    <p id="kpiHoursAvg" class="text-[11px] font-medium text-brand-400 mt-1">Promedio: 0h / servicio</p>
+                </div>
+                <div class="p-3.5 bg-brand-500/10 text-brand-400 rounded-2xl border border-brand-500/20">
+                    <i class="fa-regular fa-clock text-xl"></i>
+                </div>
+            </div>
+
+            <!-- KPI 2 -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-emerald-500/50 transition">
+                <div class="absolute inset-y-0 left-0 w-1 bg-emerald-500"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Costo Total</p>
+                    <h3 id="kpiTotalRevenue" class="text-2xl font-black text-white mt-1">$ 0</h3>
+                    <p class="text-[11px] font-medium text-emerald-400 mt-1">Facturación acumulada</p>
+                </div>
+                <div class="p-3.5 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
+                    <i class="fa-solid fa-wallet text-xl"></i>
+                </div>
+            </div>
+
+            <!-- KPI 3 -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-amber-500/50 transition">
+                <div class="absolute inset-y-0 left-0 w-1 bg-amber-500"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Valor Tarifa Promedio</p>
+                    <h3 id="kpiAvgTariff" class="text-2xl font-black text-white mt-1">$ 75.568</h3>
+                    <p id="kpiActiveAnalysts" class="text-[11px] font-medium text-amber-400 mt-1">Tarifa estándar por hora</p>
+                </div>
+                <div class="p-3.5 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20">
+                    <i class="fa-solid fa-tag text-xl"></i>
+                </div>
+            </div>
+
+            <!-- KPI 4 -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group hover:border-indigo-500/50 transition">
+                <div class="absolute inset-y-0 left-0 w-1 bg-indigo-500"></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Registros / Servicios</p>
+                    <h3 id="kpiTotalRecords" class="text-2xl font-black text-white mt-1">0</h3>
+                    <p id="kpiTopARL" class="text-[11px] font-medium text-indigo-400 mt-1">Servicios ejecutados</p>
+                </div>
+                <div class="p-3.5 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
+                    <i class="fa-solid fa-cubes text-xl"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section Grid -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Trend Line Chart -->
+            <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-white tracking-wide uppercase">Tendencia Temporal de Horas Ejecutadas</h2>
+                        <p class="text-xs text-slate-400">Comportamiento y patrones a lo largo del tiempo</p>
+                    </div>
+                    <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        <button id="granularityMonth" class="px-3 py-1 text-[11px] font-semibold rounded-lg bg-brand-600 text-white transition">Mensual</button>
+                        <button id="granularityDay" class="px-3 py-1 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition">Diario</button>
+                    </div>
+                </div>
+                <div class="flex-1 min-h-[290px] relative">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Bar Chart: ARL -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg flex flex-col">
+                <div class="mb-4">
+                    <h2 class="text-sm font-bold text-white tracking-wide uppercase">Distribución por ARL</h2>
+                    <p class="text-xs text-slate-400">Comparativa de carga operativa por entidad</p>
+                </div>
+                <div class="flex-1 min-h-[290px] relative">
+                    <canvas id="arlChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Horizontal Bar Chart: Analistas -->
+            <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg flex flex-col">
+                <div class="mb-4">
+                    <h2 class="text-sm font-bold text-white tracking-wide uppercase">Comparación por Analista</h2>
+                    <p class="text-xs text-slate-400">Ranking total de horas asignadas por profesional</p>
+                </div>
+                <div class="flex-1 min-h-[270px] relative">
+                    <canvas id="analistChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Consultores -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg flex flex-col">
+                <div class="mb-3">
+                    <h2 class="text-sm font-bold text-white tracking-wide uppercase">Top Consultores</h2>
+                    <p class="text-xs text-slate-400">Mayor demanda de servicios operacionales</p>
+                </div>
+                <div id="topConsultoresList" class="space-y-3.5 overflow-y-auto max-h-[260px] pr-1">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Interactive Data Table -->
+        <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-lg">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-sm font-bold text-white tracking-wide uppercase">Registro de Operaciones Detallado</h2>
+                    <p class="text-xs text-slate-400">Visualización de datos en tiempo real con ordenamiento y búsqueda</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative w-full sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar por analista, ARL, consultor..." class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl pl-9 pr-3.5 py-2.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition">
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 uppercase text-[10px] tracking-wider text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="px-4 py-3.5 cursor-pointer hover:text-white transition" onclick="sortTable(0)">
+                                Analista <i class="fa-solid fa-sort text-[9px] ml-1"></i>
+                            </th>
+                            <th class="px-4 py-3.5 cursor-pointer hover:text-white transition" onclick="sortTable(1)">
+                                ARL <i class="fa-solid fa-sort text-[9px] ml-1"></i>
+                            </th>
+                            <th class="px-4 py-3.5 cursor-pointer hover:text-white transition" onclick="sortTable(2)">
+                                Consultor <i class="fa-solid fa-sort text-[9px] ml-1"></i>
+                            </th>
+                            <th class="px-4 py-3.5 cursor-pointer hover:text-white transition" onclick="sortTable(3)">
+                                Fecha Ejecución <i class="fa-solid fa-sort text-[9px] ml-1"></i>
+                            </th>
+                            <th class="px-4 py-3.5 text-right cursor-pointer hover:text-white transition" onclick="sortTable(4)">
+                                Horas <i class="fa-solid fa-sort text-[9px] ml-1"></i>
+                            </th>
+                            <th class="px-4 py-3.5 text-right cursor-pointer hover:text-white transition" onclick="sortTable(5)">
+                                Costo Total <i class="fa-solid fa-sort text-[9px] ml-1"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-slate-800/60 bg-slate-900/40">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Pagination -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-400">
+                <span id="tableInfo">Mostrando 0 de 0 registros</span>
+                <div class="flex items-center gap-2">
+                    <button id="btnPrevPage" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-chevron-left text-[10px] mr-1"></i> Anterior
+                    </button>
+                    <span id="currentPageNum" class="font-semibold text-slate-200 px-2">1</span>
+                    <button id="btnNextPage" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        Siguiente <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Script Implementation -->
+    <script>
+        // Exact User Dataset
+        const rawDataset = [
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "WILMER FLOREZ", "FECHA": "1/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "ELIANA LONDOÑO", "FECHA": "9/09/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "JAIDER RUIZ", "FECHA": "11/12/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "KEVIN PALLARES", "FECHA": "1/10/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "ANGELA SALGADO", "FECHA": "9/09/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "LUCAS DE LEON", "FECHA": "11/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "JAIME GOMEZ", "FECHA": "1/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "ALVARO CORREA", "FECHA": "9/09/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "EMILIO MORA", "FECHA": "11/12/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "DEYLYS MORA", "FECHA": "1/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "SUGEY CARPIO", "FECHA": "9/09/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "VERONICA JIMENEZ", "FECHA": "8/09/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "ANDREA MORENO", "FECHA": "11/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "DANIELA TOBIAS", "FECHA": "30/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "MARCOS CORONADO", "FECHA": "1/12/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "ALEXANDER QUINTERO", "FECHA": "24/11/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "RAUL CONTRERA", "FECHA": "30/10/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "WILMER FLOREZ", "FECHA": "1/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "ELIANA LONDOÑO", "FECHA": "24/11/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "JAIDER RUIZ", "FECHA": "30/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "KEVIN PALLARES", "FECHA": "1/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "ANGELA SALGADO", "FECHA": "24/11/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "LUCAS DE LEON", "FECHA": "30/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "JAIME GOMEZ", "FECHA": "1/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "ALVARO CORREA", "FECHA": "3/09/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "EMILIO MORA", "FECHA": "22/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "DEYLYS MORA", "FECHA": "31/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "SUGEY CARPIO", "FECHA": "2/12/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "VERONICA JIMENEZ", "FECHA": "5/12/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "ANDREA MORENO", "FECHA": "7/09/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "DANIELA TOBIAS", "FECHA": "22/10/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "MARCOS CORONADO", "FECHA": "31/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "ALEXANDER QUINTERO", "FECHA": "2/12/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "RAUL CONTRERA", "FECHA": "5/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "WILMER FLOREZ", "FECHA": "7/09/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "ELIANA LONDOÑO", "FECHA": "22/10/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "JAIDER RUIZ", "FECHA": "31/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "KEVIN PALLARES", "FECHA": "2/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "ANGELA SALGADO", "FECHA": "5/12/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "LUCAS DE LEON", "FECHA": "1/12/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "JAIME GOMEZ", "FECHA": "3/09/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "ALVARO CORREA", "FECHA": "22/10/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "EMILIO MORA", "FECHA": "31/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "DEYLYS MORA", "FECHA": "2/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "SUGEY CARPIO", "FECHA": "5/12/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "VERONICA JIMENEZ", "FECHA": "1/12/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "ANDREA MORENO", "FECHA": "3/09/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "DANIELA TOBIAS", "FECHA": "22/10/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "MARCOS CORONADO", "FECHA": "31/10/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "ALEXANDER QUINTERO", "FECHA": "2/12/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "RAUL CONTRERA", "FECHA": "5/12/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "WILMER FLOREZ", "FECHA": "1/10/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "ELIANA LONDOÑO", "FECHA": "9/09/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "JAIDER RUIZ", "FECHA": "11/12/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "KEVIN PALLARES", "FECHA": "1/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "ANGELA SALGADO", "FECHA": "9/09/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "LUCAS DE LEON", "FECHA": "11/12/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "JAIME GOMEZ", "FECHA": "1/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "ALVARO CORREA", "FECHA": "9/09/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "EMILIO MORA", "FECHA": "22/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "DEYLYS MORA", "FECHA": "31/10/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "SUGEY CARPIO", "FECHA": "2/12/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "VERONICA JIMENEZ", "FECHA": "5/12/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "ANDREA MORENO", "FECHA": "1/10/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "DANIELA TOBIAS", "FECHA": "9/09/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "MARCOS CORONADO", "FECHA": "11/12/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "ALEXANDER QUINTERO", "FECHA": "1/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "RAUL CONTRERA", "FECHA": "17/10/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "WILMER FLOREZ", "FECHA": "14/12/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "ELIANA LONDOÑO", "FECHA": "5/10/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "JAIDER RUIZ", "FECHA": "30/11/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "KEVIN PALLARES", "FECHA": "31/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "ANGELA SALGADO", "FECHA": "6/11/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "LUCAS DE LEON", "FECHA": "2/12/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "JAIME GOMEZ", "FECHA": "5/12/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "ALVARO CORREA", "FECHA": "1/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "EMILIO MORA", "FECHA": "9/09/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "DEYLYS MORA", "FECHA": "11/12/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "SUGEY CARPIO", "FECHA": "1/10/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "VERONICA JIMENEZ", "FECHA": "17/10/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "ANDREA MORENO", "FECHA": "14/12/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "DANIELA TOBIAS", "FECHA": "17/10/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "MARCOS CORONADO", "FECHA": "14/12/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "ALEXANDER QUINTERO", "FECHA": "5/10/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "RAUL CONTRERA", "FECHA": "30/11/2026", "HORAS": 8, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "WILMER FLOREZ", "FECHA": "31/10/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "ELIANA LONDOÑO", "FECHA": "6/11/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "COLMENA", "CONSULTOR": "JAIDER RUIZ", "FECHA": "7/11/2026", "HORAS": 4, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "SURA", "CONSULTOR": "KEVIN PALLARES", "FECHA": "8/11/2026", "HORAS": 2, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "BOLIVAR", "CONSULTOR": "ANGELA SALGADO", "FECHA": "9/11/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "ALFA", "CONSULTOR": "LUCAS DE LEON", "FECHA": "10/11/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "COLMENA", "CONSULTOR": "JAIME GOMEZ", "FECHA": "11/11/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "SURA", "CONSULTOR": "ALVARO CORREA", "FECHA": "14/12/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "SOFIA RUIZ", "ARL": "BOLIVAR", "CONSULTOR": "EMILIO MORA", "FECHA": "15/12/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "VALERIA LOPEZ", "ARL": "ALFA", "CONSULTOR": "DEYLYS MORA", "FECHA": "16/12/2026", "HORAS": 5, "TARIFA": 75568},
+            {"ANALISTA": "KATIUSCA DE LA CRUZ", "ARL": "COLMENA", "CONSULTOR": "SUGEY CARPIO", "FECHA": "17/12/2026", "HORAS": 6, "TARIFA": 75568},
+            {"ANALISTA": "LIZ RIVERO", "ARL": "SURA", "CONSULTOR": "VERONICA JIMENEZ", "FECHA": "18/12/2026", "HORAS": 3, "TARIFA": 75568},
+            {"ANALISTA": "JOSE MARRIAGA", "ARL": "BOLIVAR", "CONSULTOR": "ANDREA MORENO", "FECHA": "19/12/2026", "HORAS": 7, "TARIFA": 75568},
+            {"ANALISTA": "NATALIE CARROLL", "ARL": "ALFA", "CONSULTOR": "DANIELA TOBIAS", "FECHA": "20/12/2026", "HORAS": 2, "TARIFA": 75568}
+        ];
+
+        // Parse Date Strings DD/MM/YYYY
+        const parsedData = rawDataset.map(item => {
+            const parts = item.FECHA.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            const dateObj = new Date(year, month - 1, day);
+            
+            const monthFormatted = month < 10 ? `0${month}` : `${month}`;
+            const dayFormatted = day < 10 ? `0${day}` : `${day}`;
+            const isoDate = `${year}-${monthFormatted}-${dayFormatted}`;
+
+            return {
+                ...item,
+                dateObj: dateObj,
+                formattedDate: isoDate,
+                facturacion: item.HORAS * item.TARIFA
+            };
+        });
+
+        // App State
+        let filteredData = [...parsedData];
+        let currentPage = 1;
+        const rowsPerPage = 8;
+        let granularity = 'month';
+        let sortCol = 3;
+        let sortAsc = false;
+
+        // Charts Instances
+        let trendChartInstance = null;
+        let arlChartInstance = null;
+        let analistChartInstance = null;
+
+        // Color Theme
+        const colors = {
+            brand: '#0284c7',
+            brandAlpha: 'rgba(2, 132, 199, 0.25)',
+            emerald: '#10b981',
+            amber: '#f59e0b',
+            indigo: '#6366f1',
+            arl: {
+                'SURA': '#0284c7',
+                'BOLIVAR': '#10b981',
+                'ALFA': '#f59e0b',
+                'COLMENA': '#8b5cf6'
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateFilterDropdowns();
+            setupEventListeners();
+            applyFilters();
+        });
+
+        function populateFilterDropdowns() {
+            const analistas = [...new Set(parsedData.map(d => d.ANALISTA))].sort();
+            const arls = [...new Set(parsedData.map(d => d.ARL))].sort();
+            const consultores = [...new Set(parsedData.map(d => d.CONSULTOR))].sort();
+
+            const analistaSelect = document.getElementById('filterAnalista');
+            analistas.forEach(a => analistaSelect.innerHTML += `<option value="${a}">${a}</option>`);
+
+            const arlSelect = document.getElementById('filterARL');
+            arls.forEach(a => arlSelect.innerHTML += `<option value="${a}">${a}</option>`);
+
+            const consultorSelect = document.getElementById('filterConsultor');
+            consultores.forEach(c => consultorSelect.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('filterStartDate').addEventListener('change', applyFilters);
+            document.getElementById('filterEndDate').addEventListener('change', applyFilters);
+            document.getElementById('filterAnalista').addEventListener('change', applyFilters);
+            document.getElementById('filterARL').addEventListener('change', applyFilters);
+            document.getElementById('filterConsultor').addEventListener('change', applyFilters);
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+            document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+                document.getElementById('filterStartDate').value = '';
+                document.getElementById('filterEndDate').value = '';
+                document.getElementById('filterAnalista').value = '';
+                document.getElementById('filterARL').value = '';
+                document.getElementById('filterConsultor').value = '';
+                document.getElementById('searchInput').value = '';
+                applyFilters();
+            });
+
+            document.getElementById('granularityMonth').addEventListener('click', (e) => {
+                granularity = 'month';
+                updateGranularityButtons(e.target, document.getElementById('granularityDay'));
+                updateTrendChart();
+            });
+
+            document.getElementById('granularityDay').addEventListener('click', (e) => {
+                granularity = 'day';
+                updateGranularityButtons(e.target, document.getElementById('granularityMonth'));
+                updateTrendChart();
+            });
+
+            document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+
+            document.getElementById('btnPrevPage').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            });
+            document.getElementById('btnNextPage').addEventListener('click', () => {
+                const maxPage = Math.ceil(filteredData.length / rowsPerPage);
+                if (currentPage < maxPage) {
+                    currentPage++;
+                    renderTable();
+                }
+            });
+        }
+
+        function updateGranularityButtons(activeBtn, inactiveBtn) {
+            activeBtn.className = "px-3 py-1 text-[11px] font-semibold rounded-lg bg-brand-600 text-white transition";
+            inactiveBtn.className = "px-3 py-1 text-[11px] font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+        }
+
+        function applyFilters() {
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const analista = document.getElementById('filterAnalista').value;
+            const arl = document.getElementById('filterARL').value;
+            const consultor = document.getElementById('filterConsultor').value;
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            filteredData = parsedData.filter(item => {
+                if (startDate && item.formattedDate < startDate) return false;
+                if (endDate && item.formattedDate > endDate) return false;
+                if (analista && item.ANALISTA !== analista) return false;
+                if (arl && item.ARL !== arl) return false;
+                if (consultor && item.CONSULTOR !== consultor) return false;
+                if (search) {
+                    const matchText = `${item.ANALISTA} ${item.ARL} ${item.CONSULTOR} ${item.FECHA}`.toLowerCase();
+                    if (!matchText.includes(search)) return false;
+                }
+                return true;
+            });
+
+            currentPage = 1;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            updateKPIs();
+            updateTrendChart();
+            updateArlChart();
+            updateAnalistChart();
+            updateTopConsultores();
+            renderTable();
+        }
+
+        function updateKPIs() {
+            const totalHours = filteredData.reduce((acc, curr) => acc + curr.HORAS, 0);
+            const totalRevenue = totalHours * 75568;
+            const totalRecords = filteredData.length;
+            const avgHours = totalRecords > 0 ? (totalHours / totalRecords).toFixed(1) : 0;
+
+            document.getElementById('kpiTotalHours').innerText = `${totalHours.toLocaleString('es-CO')} h`;
+            document.getElementById('kpiHoursAvg').innerText = `Promedio: ${avgHours}h / servicio`;
+            document.getElementById('kpiTotalRevenue').innerText = `$ ${totalRevenue.toLocaleString('es-CO')}`;
+            document.getElementById('kpiTotalRecords').innerText = totalRecords.toLocaleString('es-CO');
+        }
+
+        function updateTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            const grouped = {};
+            filteredData.forEach(d => {
+                let key;
+                if (granularity === 'month') {
+                    const year = d.dateObj.getFullYear();
+                    const month = d.dateObj.getMonth() + 1;
+                    key = `${year}-${month < 10 ? '0' + month : month}`;
+                } else {
+                    key = d.formattedDate;
+                }
+                grouped[key] = (grouped[key] || 0) + d.HORAS;
+            });
+
+            const sortedKeys = Object.keys(grouped).sort();
+            const labels = sortedKeys.map(k => {
+                if (granularity === 'month') {
+                    const [y, m] = k.split('-');
+                    const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+                    return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+                }
+                return k;
+            });
+            const dataValues = sortedKeys.map(k => grouped[k]);
+
+            if (trendChartInstance) trendChartInstance.destroy();
+
+            trendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Horas Ejecutadas',
+                        data: dataValues,
+                        borderColor: colors.brand,
+                        backgroundColor: colors.brandAlpha,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: colors.brand,
+                        borderWidth: 2.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `Horas: ${ctx.raw} h | Costo: $${(ctx.raw * 75568).toLocaleString('es-CO')}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateArlChart() {
+            const ctx = document.getElementById('arlChart').getContext('2d');
+            const arlHours = {};
+            filteredData.forEach(d => arlHours[d.ARL] = (arlHours[d.ARL] || 0) + d.HORAS);
+
+            const labels = Object.keys(arlHours);
+            const dataValues = Object.values(arlHours);
+            const bgColors = labels.map(l => colors.arl[l] || colors.brand);
+
+            if (arlChartInstance) arlChartInstance.destroy();
+
+            arlChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Horas Totales',
+                        data: dataValues,
+                        backgroundColor: bgColors,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.raw} Horas`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#cbd5e1', font: { size: 11, weight: '600' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAnalistChart() {
+            const ctx = document.getElementById('analistChart').getContext('2d');
+            const analistMap = {};
+            filteredData.forEach(d => analistMap[d.ANALISTA] = (analistMap[d.ANALISTA] || 0) + d.HORAS);
+
+            const sortedAnalists = Object.entries(analistMap).sort((a, b) => b[1] - a[1]);
+            const labels = sortedAnalists.map(item => item[0]);
+            const dataValues = sortedAnalists.map(item => item[1]);
+
+            if (analistChartInstance) analistChartInstance.destroy();
+
+            analistChartInstance = new Chart(ctx, {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Horas Ejecutadas',
+                        data: dataValues,
+                        backgroundColor: colors.brand,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `Total: ${ctx.raw} horas`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            beginAtZero: true
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#cbd5e1', font: { size: 11, weight: '500' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTopConsultores() {
+            const consultorMap = {};
+            filteredData.forEach(d => consultorMap[d.CONSULTOR] = (consultorMap[d.CONSULTOR] || 0) + d.HORAS);
+
+            const sorted = Object.entries(consultorMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const container = document.getElementById('topConsultoresList');
+            container.innerHTML = '';
+
+            if (sorted.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 py-6 text-center">Sin resultados correspondientes</p>`;
+                return;
+            }
+
+            const maxVal = sorted[0][1] || 1;
+
+            sorted.forEach(([consultor, hrs], idx) => {
+                const percentage = Math.round((hrs / maxVal) * 100);
+                container.innerHTML += `
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-slate-200 truncate max-w-[180px]">${idx + 1}. ${consultor}</span>
+                            <span class="text-brand-400">${hrs} h</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-brand-500 h-1.5 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const pageData = filteredData.slice(startIdx, startIdx + rowsPerPage);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No se encontraron registros que coincidan con los filtros aplicados.</td></tr>`;
+            } else {
+                pageData.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="px-4 py-3 font-medium text-slate-200">${row.ANALISTA}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-md border" style="background-color: ${colors.arl[row.ARL]}15; color: ${colors.arl[row.ARL]}; border-color: ${colors.arl[row.ARL]}30;">
+                                    ${row.ARL}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-300">${row.CONSULTOR}</td>
+                            <td class="px-4 py-3 text-slate-400 font-mono text-[11px]">${row.FECHA}</td>
+                            <td class="px-4 py-3 text-right font-bold text-slate-100">${row.HORAS} h</td>
+                            <td class="px-4 py-3 text-right text-emerald-400 font-semibold">$ ${row.facturacion.toLocaleString('es-CO')}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const total = filteredData.length;
+            const maxPage = Math.ceil(total / rowsPerPage) || 1;
+            document.getElementById('tableInfo').innerText = `Mostrando ${total === 0 ? 0 : startIdx + 1} - ${Math.min(startIdx + rowsPerPage, total)} de ${total} registros`;
+            document.getElementById('currentPageNum').innerText = `${currentPage} / ${maxPage}`;
+            
+            document.getElementById('btnPrevPage').disabled = currentPage === 1;
+            document.getElementById('btnNextPage').disabled = currentPage >= maxPage;
+        }
+
+        function sortTable(colIndex) {
+            if (sortCol === colIndex) {
+                sortAsc = !sortAsc;
+            } else {
+                sortCol = colIndex;
+                sortAsc = true;
+            }
+
+            filteredData.sort((a, b) => {
+                let valA, valB;
+                switch (colIndex) {
+                    case 0: valA = a.ANALISTA; valB = b.ANALISTA; break;
+                    case 1: valA = a.ARL; valB = b.ARL; break;
+                    case 2: valA = a.CONSULTOR; valB = b.CONSULTOR; break;
+                    case 3: valA = a.dateObj; valB = b.dateObj; break;
+                    case 4: valA = a.HORAS; valB = b.HORAS; break;
+                    case 5: valA = a.facturacion; valB = b.facturacion; break;
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        function exportToCSV() {
+            if (filteredData.length === 0) {
+                return;
+            }
+
+            const headers = ["ANALISTA", "ARL", "CONSULTOR", "FECHA DE EJECUCION", "HORAS DE LA ACTIVIDAD", "TARIFA DE LA ACTIVIDAD", "COSTO TOTAL"];
+            const rows = filteredData.map(d => [
+                `"${d.ANALISTA}"`,
+                `"${d.ARL}"`,
+                `"${d.CONSULTOR}"`,
+                `"${d.FECHA}"`,
+                d.HORAS,
+                d.TARIFA,
+                d.facturacion
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Actividad_Area_Operaciones_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
